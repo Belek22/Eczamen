@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Детали{% endblock title %}
+
+{% block content %}
+    <h1 class="text-3xl text-center font-bold mb-8 mt-10">Добро пожаловать в мир ноутбуков</h1>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {% for product in news %}
+            <div class="relative group overflow-hidden justify-center card-container">
+                <div class="max-w-sm h-full rounded overflow-hidden shadow-lg flex flex-col mx-auto">
+                    <div style="width: 100%; padding-top: 100%; position: relative;">
+                        <div class="slider-container" data-product-id="{{ product.id }}">
+                            {% for image in product.images.all %}
+                                <img src="{{ image.image.url }}" class="w-full h-full absolute top-0 left-0 object-cover transition duration-300 transform group-hover:scale-110 {% if forloop.first %}block{% else %}hidden{% endif %}" alt="{{ product.title }}">
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="px-6 py-4 flex-grow"> 
+                        <h5 class="font-bold text-center text-xl mb-2">{{ product.title }}</h5>
+                        <h6 class="text-gray-700 mb-2">{{ product.category.name }}</h6>
+                        <p class="text-gray-700 text-base">{{ product.price }}</p>
+                        <div class="mt-4">
+                            {% for tag in product.tags.all %}
+                                <span class="inline-block rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2">{{ tag.name }}/</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="bg-white py-2 px-4 mx-auto">
+                        <a href="{% url 'detail_news' pk=product.id %}" class="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full">Подробнее</a>
+                    </div>
+                </div>
+                <div class="bg-white py-2 px-4 mx-auto flex justify-between">
+                    <button class="prev-slide-btn flex items-center justify-center w-12 h-12 bg-gray-800 bg-opacity-50 text-white text-2xl rounded-full transition-opacity duration-300 hover:bg-opacity-75 focus:outline-none focus:bg-opacity-75" onclick="prevSlide(this)">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    <button class="next-slide-btn flex items-center justify-center w-12 h-12 bg-gray-800 bg-opacity-50 text-white text-2xl rounded-full transition-opacity duration-300 hover:bg-opacity-75 focus:outline-none focus:bg-opacity-75" onclick="nextSlide(this)">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const sliders = document.querySelectorAll('.relative.group.overflow-hidden');
+            const intervalDuration = 1000; 
+            let slideshowActive = new Map(); 
+            let firstImageIndex = new Map(); 
+        
+            function startSlideshow(slider) {
+                if (!slideshowActive.get(slider)) { 
+                    const images = slider.querySelectorAll('.slider-container img');
+                    let currentIndex = firstImageIndex.get(slider); 
+        
+                    if (currentIndex === undefined) {
+                        currentIndex = 0; 
+                        firstImageIndex.set(slider, currentIndex);
+                    } else {
+                        images[currentIndex].classList.remove('hidden');
+                    }
+        
+                    slideshowActive.set(slider, true);
+        
+                    slider.intervalId = setInterval(() => {
+                        images[currentIndex].classList.add('hidden');
+                        currentIndex = (currentIndex + 1) % images.length;
+                        images[currentIndex].classList.remove('hidden');
+                    }, intervalDuration);
+                }
+            }
+        
+            function stopSlideshow(slider) {
+                clearInterval(slider.intervalId);
+                slideshowActive.set(slider, false); 
+            }
+        
+            sliders.forEach(slider => {
+                const images = slider.querySelectorAll('.slider-container img');
+                let currentIndex = 0;
+        
+                slider.addEventListener('mouseenter', function() {
+                    startSlideshow(slider);
+                });
+        
+                slider.addEventListener('mouseleave', function() {
+                    images.forEach((img, index) => {
+                        img.classList.toggle('hidden', index !== firstImageIndex.get(slider));
+                    });
+                    stopSlideshow(slider);
+                });
+        
+                stopSlideshow(slider);
+            });
+        });
+    </script>
+
+{% endblock content %}

@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}| Детали{{ news.title }}{% endblock title %}
+
+{% block content %}
+<div class="container mx-auto text-center">
+    <h1 class="mb-5 mt-5 text-3xl">{{ news.title }}</h1>
+    <div class="flex flex-wrap justify-center mb-6">
+        <div class="w-full md:w-1/2 mb-4 md:mb-0">
+            <div class="slider-container relative px-20 py-70">
+                {% for image in news.images.all %}
+                    <img src="{{ image.image.url }}" class="w-80 h-80 object-cover mb-3 cursor-pointer {% if forloop.first %}block{% else %}hidden{% endif %}" alt="{{ news.title }}" onclick="openModal('{{ image.image.url }}')">
+                {% endfor %}
+            </div>
+            <div class="flex mt-2 justify-center items-center">
+                <div class="slider-controls flex justify-center mt-3">
+                    {% for image in news.images.all %}
+                        <button class="slide-control bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded" onclick="showSlide({{ forloop.counter0 }})">
+                            {{ forloop.counter }}
+                        </button>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <table class="table-auto w-full">
+                <thead>
+                    <tr>
+                        <th class="px-4 py-2">Название</th>
+                        <th class="px-4 py-2">Значение</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for attribute in news.attributes.all %}
+                        <tr>
+                            <td class="border px-4 py-2">{{ attribute.name }}</td>
+                            <td class="border px-4 py-2">
+                                {% if attribute.link %}
+                                    <a href="{{ attribute.link }}" class="text-blue-500">{{ attribute.value }}</a>
+                                {% else %}
+                                    {{ attribute.value }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="w-full mt-20 md:w-1/2 md:pl-6 text-left">
+            <p class="mb-3"> Категория: {{ news.category.name }}</p>
+            <p class="mb-3"> Цена: {{ news.price }}</p>
+            <p class="mb-6">{{ news.content }}</p>
+            {% if news.info %}
+                <p class="text-end mt-3">
+                    <a target="_blank" href="{{ news.info.link }}" class="text-blue-500">Link</a> |
+                    <span>{{ news.info.email }}: {{ news.info.rating }}</span>
+                </p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div id="modal" class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center hidden">
+    <div class="modal-content bg-white p-4 rounded shadow-md relative">
+        <img id="modal-image" src="" alt="" class="w-full">
+        <button class="close-button absolute top-0 right-0 mr-4 mt-4 text-gray-500 text-lg" onclick="closeModal()">✕</button>
+        <button class="prev-button absolute top-1/2 left-0 transform -translate-y-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded" onclick="showPrevImage()">Назад</button>
+        <button class="next-button absolute top-1/2 right-0 transform -translate-y-1/2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded" onclick="showNextImage()">Вперёд</button>
+    </div>
+</div>
+
+<script>
+    const images = [
+        {% for image in news.images.all %}
+            '{{ image.image.url }}',
+        {% endfor %}
+    ];
+    let currentImageIndex = 0;
+
+    function showSlide(index) {
+        const slides = document.querySelectorAll('.slider-container img');
+        slides.forEach((slide, i) => {
+            if (i === index) {
+                slide.classList.remove('hidden');
+            } else {
+                slide.classList.add('hidden');
+            }
+        });
+    }
+
+    function openModal(imageUrl) {
+        const modal = document.getElementById('modal');
+        const modalImage = document.getElementById('modal-image');
+        modalImage.src = imageUrl;
+        modal.classList.remove('hidden');
+        currentImageIndex = images.indexOf(imageUrl);
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('modal');
+        modal.classList.add('hidden');
+    }
+
+    function showNextImage() {
+        currentImageIndex = (currentImageIndex + 1) % images.length;
+        const modalImage = document.getElementById('modal-image');
+        modalImage.src = images[currentImageIndex];
+    }
+
+    function showPrevImage() {
+        currentImageIndex = (currentImageIndex - 1 + images.length) % images.length;
+        const modalImage = document.getElementById('modal-image');
+        modalImage.src = images[currentImageIndex];
+    }
+</script>
+
+{% endblock %}
